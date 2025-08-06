@@ -106,7 +106,23 @@ def dashboard():
     
     # Get recent distributions
     recent_distributions = Distribution.query().filter_by(user_id=current_user.id).all()
-    recent_distributions.sort(key=lambda x: x.created_at, reverse=True)
+    
+    # Sort by created_at, handling both string and datetime objects
+    def get_sort_key(dist):
+        timestamp = dist.created_at
+        if isinstance(timestamp, str):
+            try:
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                # Convert to naive datetime for comparison
+                return dt.replace(tzinfo=None) if dt.tzinfo else dt
+            except:
+                return datetime.min
+        # Ensure datetime is naive for comparison
+        if timestamp and hasattr(timestamp, 'tzinfo') and timestamp.tzinfo:
+            return timestamp.replace(tzinfo=None)
+        return timestamp or datetime.min
+    
+    recent_distributions.sort(key=get_sort_key, reverse=True)
     recent_distributions = recent_distributions[:5]
     
     for dist in recent_distributions:
@@ -114,12 +130,35 @@ def dashboard():
         template_data = db.get_template(dist.template_id)
         template_title = template_data.get('title', 'Unknown Template') if template_data else 'Unknown Template'
         
+        # Parse timestamp if it's a string
+        timestamp = dist.created_at
+        if isinstance(timestamp, str):
+            try:
+                # Try to parse ISO format timestamp
+                timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                # Convert to naive datetime
+                timestamp = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
+            except:
+                try:
+                    # Fallback to dateutil parser if available
+                    from dateutil import parser as date_parser
+                    timestamp = date_parser.parse(timestamp)
+                    # Convert to naive datetime
+                    timestamp = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
+                except:
+                    timestamp = datetime.utcnow()
+        elif not timestamp:
+            timestamp = datetime.utcnow()
+        else:
+            # Ensure existing datetime is naive
+            timestamp = timestamp.replace(tzinfo=None) if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo else timestamp
+        
         stats['recent_activity'].append({
             'id': dist.id,
             'type': 'invitation_sent',
             'title': template_title,
             'description': f'Sent via {dist.method}',
-            'timestamp': dist.created_at,
+            'timestamp': timestamp,
             'status': dist.status
         })
     
@@ -344,15 +383,16 @@ def send_gmail():
                 successful_sends += 1
         
         # Save distribution record using Supabase
-        distribution_data = {
-            'template_id': template_id,
-            'method': 'gmail',
-            'recipients': json.dumps([{'email': email} for email in recipient_emails]),
-            'status': 'sent' if successful_sends > 0 else 'failed',
-            'sent_at': datetime.utcnow().isoformat(),
-            'user_id': current_user.id
-        }
-        db.create_distribution(**distribution_data)
+        recipients_json = json.dumps([{'email': email} for email in recipient_emails])
+        db.create_distribution(
+            user_id=current_user.id,
+            template_id=template_id,
+            method='gmail',
+            recipients=recipient_emails,  # Pass as list
+            status='sent' if successful_sends > 0 else 'failed',
+            sent_at=datetime.utcnow().isoformat(),
+            formatted_recipients=recipients_json  # Store formatted recipients
+        )
         
         # Return summary
         if successful_sends == len(recipient_emails):
@@ -399,15 +439,16 @@ def send_whatsapp():
         result = send_whatsapp_message(phone_number, template_data['content'])
         
         # Save distribution record using Supabase
-        distribution_data = {
-            'template_id': template_id,
-            'method': 'whatsapp',
-            'recipients': json.dumps([{'phone': phone_number}]),
-            'status': 'sent' if result['success'] else 'failed',
-            'sent_at': datetime.utcnow().isoformat(),
-            'user_id': current_user.id
-        }
-        db.create_distribution(**distribution_data)
+        recipients_json = json.dumps([{'phone': phone_number}])
+        db.create_distribution(
+            user_id=current_user.id,
+            template_id=template_id,
+            method='whatsapp',
+            recipients=[phone_number],  # Pass as list
+            status='sent' if result['success'] else 'failed',
+            sent_at=datetime.utcnow().isoformat(),
+            formatted_recipients=recipients_json  # Store formatted recipients
+        )
         
         return jsonify({
             'success': result['success'],

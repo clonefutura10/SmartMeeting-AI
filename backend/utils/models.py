@@ -105,7 +105,7 @@ def init_models(db):
 
     class Distribution:
         def __init__(self, id, template_id, method, recipients=None, status='pending',
-                     sent_at=None, created_at=None, user_id=None):
+                     sent_at=None, created_at=None, user_id=None, updated_at=None, **kwargs):
             self.id = id
             self.template_id = template_id
             self.method = method
@@ -114,6 +114,7 @@ def init_models(db):
             self.sent_at = sent_at
             self.created_at = created_at or datetime.utcnow()
             self.user_id = user_id
+            self.updated_at = updated_at
         
         @staticmethod
         def query():

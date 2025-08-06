@@ -253,45 +253,100 @@ class SupabaseService:
         response = self.supabase.table('meetings').delete().eq('id', template_id).execute()
         return len(response.data) > 0 if response.data else False
     
-    # Distribution Management (mapped to social_posts)
+    # Distribution Management
     def create_distribution(self, user_id: str, template_id: str, method: str, 
                           recipients: List[str], **kwargs) -> Dict:
-        """Create a new distribution record (stored as social_post)"""
+        """Create a new distribution record"""
+        
+        # Insert into social_posts table
         distribution_data = {
             'meeting_id': template_id,
             'platforms': json.dumps([method]),
             'status': kwargs.get('status', 'pending'),
-            'published_at': kwargs.get('sent_at') if kwargs.get('status') == 'sent' else None,
-            'content': kwargs.get('recipients', json.dumps(recipients))  # Store recipients in content field
+            'published_at': kwargs.get('sent_at') if kwargs.get('status') == 'sent' else None
         }
         
         response = self.supabase.table('social_posts').insert(distribution_data).execute()
-        return response.data[0] if response.data else None
+        
+        if response.data:
+            distribution_id = response.data[0]['id']
+            
+            # Store recipients in meeting_attendees table
+            recipients_data = kwargs.get('formatted_recipients')
+            if recipients_data:
+                try:
+                    recipients_list = json.loads(recipients_data) if isinstance(recipients_data, str) else recipients_data
+                    
+                    # Check if attendees record exists for this meeting
+                    existing_response = self.supabase.table('meeting_attendees').select('*').eq('meeting_id', template_id).execute()
+                    
+                    if existing_response.data:
+                        # Update existing record
+                        attendee_record = existing_response.data[0]
+                        current_attendees = attendee_record.get('attendees', [])
+                        # Add new recipients to existing attendees
+                        current_attendees.extend(recipients_list)
+                        
+                        self.supabase.table('meeting_attendees').update({
+                            'attendees': current_attendees
+                        }).eq('meeting_id', template_id).execute()
+                    else:
+                        # Create new attendees record
+                        attendee_data = {
+                            'meeting_id': template_id,
+                            'attendees': recipients_list
+                        }
+                        self.supabase.table('meeting_attendees').insert(attendee_data).execute()
+                        
+                except Exception as e:
+                    print(f"Error storing recipients: {e}")
+            
+            return response.data[0]
+        
+        return None
     
     def get_distributions(self, user_id: Optional[str] = None) -> List[Dict]:
-        """Get distributions (social_posts)"""
-        query = self.supabase.table('social_posts').select('*, meetings(*)')
+        """Get distributions with recipients"""
         
+        # Get distributions from social_posts
+        query = self.supabase.table('social_posts').select('*')
         response = query.execute()
-        distributions = []
         
+        distributions = []
         for post in response.data if response.data else []:
-            # Get the user_id from meeting_minutes
-            if post.get('meetings'):
-                meeting_id = post['meeting_id']
-                minutes_response = self.supabase.table('meeting_minutes').select('created_by').eq('meeting_id', meeting_id).execute()
+            # Get recipients from meeting_attendees
+            attendees_response = self.supabase.table('meeting_attendees').select('attendees').eq('meeting_id', post['meeting_id']).execute()
+            
+            recipients = []
+            if attendees_response.data and attendees_response.data[0].get('attendees'):
+                recipients = attendees_response.data[0]['attendees']
+            
+            # Get the user_id from meeting_minutes to filter by user if needed
+            if user_id:
+                minutes_response = self.supabase.table('meeting_minutes').select('created_by').eq('meeting_id', post['meeting_id']).execute()
                 if minutes_response.data:
                     created_by = minutes_response.data[0]['created_by']
-                    if not user_id or created_by == user_id:
-                        distributions.append({
-                            'id': post['id'],
-                            'template_id': post['meeting_id'],
-                            'method': post['platforms'][0] if post['platforms'] else 'unknown',
-                            'recipients': post.get('content', '[]'),  # Get recipients from content field
-                            'status': post['status'],
-                            'sent_at': post['published_at'],
-                            'user_id': created_by
-                        })
+                    if created_by != user_id:
+                        continue
+                else:
+                    continue
+                user_id_for_record = created_by
+            else:
+                # Get user_id for the record
+                minutes_response = self.supabase.table('meeting_minutes').select('created_by').eq('meeting_id', post['meeting_id']).execute()
+                user_id_for_record = minutes_response.data[0]['created_by'] if minutes_response.data else None
+            
+            distributions.append({
+                'id': post['id'],
+                'template_id': post['meeting_id'],
+                'method': json.loads(post['platforms'])[0] if post['platforms'] else 'unknown',
+                'recipients': json.dumps(recipients),
+                'status': post['status'],
+                'sent_at': post['published_at'],
+                'created_at': post['created_at'],
+                'updated_at': post['updated_at'],
+                'user_id': user_id_for_record
+            })
         
         return distributions
     
