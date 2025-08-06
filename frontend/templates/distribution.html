@@ -1,0 +1,541 @@
+{% extends "base.html" %}
+
+{% block title %}Distribution - SmartMeetingAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-dark fw-bold">
+                        <i class="fas fa-paper-plane me-2 text-primary"></i>
+                        Distribution
+                    </h1>
+                    <p class="text-muted mb-0">Send meeting invitations via email, WhatsApp, or calendar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Template Selection -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Select Template
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if templates %}
+                        <div class="template-list">
+                            {% for template in templates %}
+                            <div class="template-item border rounded p-3 mb-3 cursor-pointer hover-bg-light transition-all" 
+                                 data-template-id="{{ template.id }}" 
+                                 style="cursor: pointer; transition: all 0.3s ease;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-semibold text-dark mb-1">{{ template.title }}</h6>
+                                        <p class="text-muted small mb-2">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ template.meeting_topic }} • {{ template.meeting_date if template.meeting_date else 'No date' }}
+                                        </p>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="badge 
+                                            {% if template.priority == 'High' %}bg-danger
+                                            {% elif template.priority == 'Medium' %}bg-warning text-dark
+                                            {% elif template.priority == 'Low' %}bg-success
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ template.priority or 'No priority' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No templates available</h6>
+                            <p class="text-muted small">Create a template first to send invitations</p>
+                            <a href="{{ url_for('template_generator_page') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Create Template
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribution Methods -->
+        <div class="col-lg-6">
+            <div class="row">
+                <!-- Gmail Distribution -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fab fa-google me-2"></i>
+                                Gmail Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="gmail-form">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        Recipient Emails
+                                    </label>
+                                    
+                                    <!-- Contact Type Selection -->
+                                    <div class="mb-2">
+                                        <select id="gmail-contact-type" class="form-select form-select-sm">
+                                            <option value="">All Contacts</option>
+                                            <option value="internal">Internal Members</option>
+                                            <option value="external">External Contacts</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Contact Selection -->
+                                    <div class="mb-2">
+                                        <select id="gmail-contact-select" class="form-select" multiple size="4">
+                                            <option value="">Loading contacts...</option>
+                                        </select>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Hold Ctrl/Cmd to select multiple contacts
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Selected Recipients Display -->
+                                    <div id="gmail-selected-recipients" class="d-none mb-2">
+                                        <label class="form-label fw-semibold small">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Selected Recipients:
+                                        </label>
+                                        <div id="gmail-recipients-list" class="border rounded p-2 bg-light"></div>
+                                    </div>
+                                    
+                                    <!-- Manual Email Input -->
+                                    <div class="mb-2">
+                                        <textarea 
+                                            id="gmail-manual-emails" 
+                                            name="manualEmails" 
+                                            rows="2" 
+                                            class="form-control" 
+                                            placeholder="Or enter additional email addresses manually (one per line)"></textarea>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Add any additional email addresses not in your contacts
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="gmail-subject" class="form-label fw-semibold">
+                                        <i class="fas fa-tag me-1"></i>
+                                        Subject Line
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="gmail-subject" 
+                                        name="subject" 
+                                        class="form-control" 
+                                        placeholder="Meeting Invitation" 
+                                        value="Meeting Invitation"
+                                        required>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Send via Gmail
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Distribution -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fab fa-whatsapp me-2"></i>
+                                WhatsApp Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="whatsapp-form">
+                                <div class="mb-3">
+                                    <label for="whatsapp-phone" class="form-label fw-semibold">
+                                        <i class="fas fa-phone me-1"></i>
+                                        Phone Number
+                                    </label>
+                                    <input 
+                                        type="tel" 
+                                        id="whatsapp-phone" 
+                                        name="phoneNumber" 
+                                        class="form-control" 
+                                        placeholder="+1234567890"
+                                        required>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Include country code (e.g., +1 for US)
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fab fa-whatsapp me-2"></i>
+                                    Send via WhatsApp
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Preview -->
+    <div id="template-preview" class="row mt-4" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        Template Preview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.template-item {
+    transition: all 0.3s ease;
+    border: 2px solid #e9ecef !important;
+}
+
+.template-item:hover {
+    background-color: #f8f9fa !important;
+    border-color: #667eea !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.template-item.selected {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+    border-radius: 6px;
+}
+
+.card-header {
+    border-bottom: none;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-label {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedTemplateId = null;
+    let selectedTemplateContent = null;
+    let selectedGmailContacts = [];
+
+    // Load contacts on page load
+    loadGmailContacts();
+    
+    // Gmail contact type change handler
+    document.getElementById('gmail-contact-type').addEventListener('change', function() {
+        loadGmailContacts(this.value);
+    });
+    
+    // Gmail contact selection change handler
+    document.getElementById('gmail-contact-select').addEventListener('change', function() {
+        updateGmailSelectedRecipients();
+    });
+
+    // Template selection
+    document.querySelectorAll('.template-item').forEach(item => {
+        item.addEventListener('click', function() {
+            // Remove previous selection
+            document.querySelectorAll('.template-item').forEach(i => {
+                i.classList.remove('selected');
+            });
+            
+            // Add selection to current item
+            this.classList.add('selected');
+            
+            selectedTemplateId = this.dataset.templateId;
+            
+            // Show preview
+            showTemplatePreview();
+        });
+    });
+
+    // Load Gmail contacts from database
+    async function loadGmailContacts(memberType = '') {
+        try {
+            let url = '/api/contacts';
+            if (memberType) {
+                url += `?member_type=${memberType}`;
+            }
+            
+            const response = await fetch(url);
+            const result = await response.json();
+            
+            if (result.success) {
+                const contactSelect = document.getElementById('gmail-contact-select');
+                contactSelect.innerHTML = '';
+                result.contacts.forEach(contact => {
+                    const option = document.createElement('option');
+                    option.value = contact.id;
+                    option.textContent = `${contact.name} (${contact.email}) - ${contact.member_type}`;
+                    option.dataset.email = contact.email;
+                    option.dataset.name = contact.name;
+                    contactSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading contacts:', error);
+        }
+    }
+
+    // Update Gmail selected recipients display
+    function updateGmailSelectedRecipients() {
+        const contactSelect = document.getElementById('gmail-contact-select');
+        selectedGmailContacts = Array.from(contactSelect.selectedOptions).map(option => ({
+            id: option.value,
+            name: option.dataset.name,
+            email: option.dataset.email
+        }));
+
+        const selectedRecipientsDiv = document.getElementById('gmail-selected-recipients');
+        const recipientsList = document.getElementById('gmail-recipients-list');
+
+        if (selectedGmailContacts.length > 0) {
+            recipientsList.innerHTML = selectedGmailContacts.map(contact => 
+                `<span class="badge bg-primary me-1 mb-1">${contact.name} (${contact.email})</span>`
+            ).join('');
+            selectedRecipientsDiv.classList.remove('d-none');
+        } else {
+            selectedRecipientsDiv.classList.add('d-none');
+        }
+    }
+
+    // Gmail form submission
+    document.getElementById('gmail-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedTemplateId) {
+            showAlert('Please select a template first', 'warning');
+            return;
+        }
+
+        const formData = new FormData(this);
+        
+        // Get selected contact emails
+        const selectedEmails = selectedGmailContacts.map(contact => contact.email);
+        
+        // Get manual emails
+        const manualEmails = formData.get('manualEmails').split('\n').filter(email => email.trim() !== '');
+        
+        // Combine all emails
+        const recipientEmails = [...selectedEmails, ...manualEmails];
+        
+        if (recipientEmails.length === 0) {
+            showAlert('Please select contacts or enter at least one email address', 'warning');
+            return;
+        }
+
+        const data = {
+            templateId: selectedTemplateId,
+            recipientEmails: recipientEmails,
+            subject: formData.get('subject')
+        };
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/distribution/gmail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                this.reset();
+            } else {
+                showAlert('Failed to send emails: ' + result.error, 'danger');
+            }
+        } catch (error) {
+            showAlert('Error sending emails: ' + error.message, 'danger');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // WhatsApp form submission
+    document.getElementById('whatsapp-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedTemplateId) {
+            showAlert('Please select a template first', 'warning');
+            return;
+        }
+
+        const formData = new FormData(this);
+        const phoneNumber = formData.get('phoneNumber').trim();
+        
+        if (!phoneNumber) {
+            showAlert('Please enter a phone number', 'warning');
+            return;
+        }
+
+        const data = {
+            templateId: selectedTemplateId,
+            phoneNumber: phoneNumber
+        };
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/distribution/whatsapp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                this.reset();
+            } else {
+                showAlert('Failed to send WhatsApp message: ' + result.error, 'danger');
+            }
+        } catch (error) {
+            showAlert('Error sending WhatsApp message: ' + error.message, 'danger');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    function showTemplatePreview() {
+        const preview = document.getElementById('template-preview');
+        const content = document.getElementById('preview-content');
+        
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Template selected!</strong> Ready to send invitations.
+                </div>
+            </div>
+        `;
+        
+        preview.style.display = 'block';
+        
+        // Smooth scroll to preview
+        preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Add some interactive feedback
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+    });
+});
+</script>
+{% endblock %} 
