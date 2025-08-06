@@ -261,7 +261,8 @@ class SupabaseService:
             'meeting_id': template_id,
             'platforms': json.dumps([method]),
             'status': kwargs.get('status', 'pending'),
-            'published_at': kwargs.get('sent_at') if kwargs.get('status') == 'sent' else None
+            'published_at': kwargs.get('sent_at') if kwargs.get('status') == 'sent' else None,
+            'content': kwargs.get('recipients', json.dumps(recipients))  # Store recipients in content field
         }
         
         response = self.supabase.table('social_posts').insert(distribution_data).execute()
@@ -286,7 +287,7 @@ class SupabaseService:
                             'id': post['id'],
                             'template_id': post['meeting_id'],
                             'method': post['platforms'][0] if post['platforms'] else 'unknown',
-                            'recipients': '[]',  # Not stored in social_posts
+                            'recipients': post.get('content', '[]'),  # Get recipients from content field
                             'status': post['status'],
                             'sent_at': post['published_at'],
                             'user_id': created_by

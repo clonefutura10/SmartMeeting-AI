@@ -128,7 +128,7 @@ class TemplateGenerator:
         return ""
 
     def _create_modern_template(self, **kwargs) -> str:
-        """Create a modern, card-based template"""
+        """Create a modern, card-based template with inline CSS for email compatibility"""
         
         # Get template type for styling
         template_type = kwargs.get('template_type', 'formal_internal')
@@ -168,65 +168,65 @@ class TemplateGenerator:
         current_date = datetime.now().day
         
         return f"""
-        <div class="modern-meeting-card">
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; border: 1px solid #e9ecef;">
             <!-- Header Section -->
-            <div class="meeting-header">
-                <div class="header-content">
-                    <div class="calendar-icon">
-                        <i class="fas fa-calendar"></i>
-                        <span class="date-number">{current_date}</span>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="position: relative; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                        <span style="font-size: 1.5rem; color: white;">📅</span>
+                        <span style="position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold;">{current_date}</span>
                     </div>
-                    <div class="header-text">
-                        <h1 class="meeting-title">Meeting Invitation</h1>
-                        <p class="meeting-subtitle">SmartMeetingAI • Professional Meeting Coordination</p>
+                    <div style="flex: 1; min-width: 200px;">
+                        <h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem 0; color: white;">Meeting Invitation</h1>
+                        <p style="font-size: 0.9rem; opacity: 0.9; margin: 0;">SmartMeetingAI • Professional Meeting Coordination</p>
                     </div>
-                    <div class="meeting-type-badge">
+                    <div style="background: rgba(255, 255, 255, 0.2); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; backdrop-filter: blur(10px);">
                         {meeting_type_label}
                     </div>
                 </div>
             </div>
             
             <!-- Meeting Overview -->
-            <div class="meeting-overview">
-                <h2 class="meeting-topic">{kwargs.get('meeting_topic', 'Meeting')}</h2>
-                <div class="priority-badge" style="background-color: {priority_color}">
+            <div style="padding: 2rem; background: #f8f9fa; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin: 0; flex: 1; min-width: 200px;">{kwargs.get('meeting_topic', 'Meeting')}</h2>
+                <div style="background-color: {priority_color}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                     {priority.upper()} PRIORITY
                 </div>
             </div>
             
             <!-- Meeting Details Grid -->
-            <div class="meeting-details-section">
-                <div class="section-header">
-                    <i class="fas fa-clipboard-list"></i>
-                    <h3>Meeting Details</h3>
+            <div style="padding: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea; font-size: 1.2rem;">📋</span>
+                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Details</h3>
                 </div>
-                <div class="details-grid">
-                    <div class="detail-card">
-                        <i class="fas fa-calendar-alt"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">DATE</span>
-                            <span class="detail-value">{kwargs.get('meeting_date', 'TBD')}</span>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
+                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">📅</span>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DATE</span>
+                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('meeting_date', 'TBD')}</span>
                         </div>
                     </div>
-                    <div class="detail-card">
-                        <i class="fas fa-clock"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">TIME</span>
-                            <span class="detail-value">{kwargs.get('meeting_time', 'TBD')}</span>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
+                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">🕐</span>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">TIME</span>
+                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('meeting_time', 'TBD')}</span>
                         </div>
                     </div>
-                    <div class="detail-card">
-                        <i class="fas fa-stopwatch"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">DURATION</span>
-                            <span class="detail-value">{kwargs.get('duration', '30 minutes')}</span>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
+                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">⏱️</span>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DURATION</span>
+                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('duration', '30 minutes')}</span>
                         </div>
                     </div>
-                    <div class="detail-card">
-                        <i class="fas fa-microphone"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">SPEAKER</span>
-                            <span class="detail-value">{kwargs.get('speaker_name', 'TBD')}</span>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
+                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">🎤</span>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">SPEAKER</span>
+                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('speaker_name', 'TBD')}</span>
                         </div>
                     </div>
                 </div>
@@ -234,12 +234,12 @@ class TemplateGenerator:
             
             <!-- Meeting Link Section -->
             {f'''
-            <div class="meeting-link-section">
-                <div class="section-header">
-                    <i class="fas fa-link"></i>
-                    <h3>Meeting Link</h3>
+            <div style="padding: 0 2rem 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea; font-size: 1.2rem;">🔗</span>
+                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Link</h3>
                 </div>
-                <a href="{kwargs.get('meeting_link', '#')}" class="join-meeting-btn" target="_blank">
+                <a href="{kwargs.get('meeting_link', '#')}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; border: none; cursor: pointer;">
                     Join Meeting
                 </a>
             </div>
@@ -247,48 +247,48 @@ class TemplateGenerator:
             
             <!-- Location Section -->
             {f'''
-            <div class="location-section">
-                <div class="section-header">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <h3>Location</h3>
+            <div style="padding: 0 2rem 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea; font-size: 1.2rem;">📍</span>
+                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Location</h3>
                 </div>
-                <p class="location-text">{kwargs.get('location', 'TBD')}</p>
+                <p style="color: #2c3e50; font-weight: 500; margin: 0; font-size: 1rem;">{kwargs.get('location', 'TBD')}</p>
             </div>
             ''' if kwargs.get('location') else ''}
             
             <!-- Agenda Section -->
             {f'''
-            <div class="agenda-section">
-                <div class="section-header">
-                    <i class="fas fa-file-alt"></i>
-                    <h3>Agenda</h3>
+            <div style="padding: 0 2rem 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea; font-size: 1.2rem;">📄</span>
+                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Agenda</h3>
                 </div>
-                <p class="agenda-text">{kwargs.get('additional_notes', 'Discussing meeting objectives and key points')}</p>
+                <p style="color: #2c3e50; margin: 0; line-height: 1.6;">{kwargs.get('additional_notes', 'Discussing meeting objectives and key points')}</p>
             </div>
             ''' if kwargs.get('additional_notes') else ''}
             
             <!-- Attendees Section -->
             {f'''
-            <div class="attendees-section">
-                <div class="section-header">
-                    <i class="fas fa-users"></i>
-                    <h3>Attendees</h3>
+            <div style="padding: 0 2rem 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <span style="color: #667eea; font-size: 1.2rem;">👥</span>
+                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Attendees</h3>
                 </div>
-                <p class="attendees-text">{attendees if attendees else 'To be confirmed'}</p>
+                <p style="color: #2c3e50; margin: 0; font-weight: 500;">{attendees if attendees else 'To be confirmed'}</p>
             </div>
             ''' if attendees else ''}
             
             <!-- Action Button -->
-            <div class="action-section">
-                <button class="confirm-attendance-btn">
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa;">
+                <button style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
                     Confirm Attendance
                 </button>
             </div>
             
             <!-- Footer -->
-            <div class="meeting-footer">
-                <p>Generated by SmartMeetingAI • Professional Meeting Coordination</p>
-                <p>Please respond to confirm your attendance</p>
+            <div style="background: #343a40; color: white; padding: 1.5rem 2rem; text-align: center;">
+                <p style="margin: 0.25rem 0; font-size: 0.9rem; opacity: 0.9;">Generated by SmartMeetingAI • Professional Meeting Coordination</p>
+                <p style="margin: 0.25rem 0; font-size: 0.9rem; opacity: 0.9;">Please respond to confirm your attendance</p>
             </div>
         </div>
         """
