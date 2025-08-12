@@ -128,7 +128,7 @@ class TemplateGenerator:
         return ""
 
     def _create_modern_template(self, **kwargs) -> str:
-        """Create a modern, card-based template with inline CSS for email compatibility"""
+        """Create a modern, professional template matching the image design"""
         
         # Get template type for styling
         template_type = kwargs.get('template_type', 'formal_internal')
@@ -164,133 +164,275 @@ class TemplateGenerator:
         if isinstance(attendees, list):
             attendees = ', '.join(attendees)
         
-        # Get current date for calendar icon
-        current_date = datetime.now().day
+        # Format date and time
+        meeting_date = kwargs.get('meeting_date', 'TBD')
+        meeting_time = kwargs.get('meeting_time', 'TBD')
         
         return f"""
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; border: 1px solid #e9ecef;">
-            <!-- Header Section -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white;">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-                    <div style="position: relative; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-                        <span style="font-size: 1.5rem; color: white;">📅</span>
-                        <span style="position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold;">{current_date}</span>
-                    </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem 0; color: white;">Meeting Invitation</h1>
-                        <p style="font-size: 0.9rem; opacity: 0.9; margin: 0;">SmartMeetingAI • Professional Meeting Coordination</p>
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.2); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; backdrop-filter: blur(10px);">
-                        {meeting_type_label}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Meeting Overview -->
-            <div style="padding: 2rem; background: #f8f9fa; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin: 0; flex: 1; min-width: 200px;">{kwargs.get('meeting_topic', 'Meeting')}</h2>
-                <div style="background-color: {priority_color}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                    {priority.upper()} PRIORITY
-                </div>
-            </div>
-            
-            <!-- Meeting Details Grid -->
-            <div style="padding: 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                    <span style="color: #667eea; font-size: 1.2rem;">📋</span>
-                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Details</h3>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
-                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">📅</span>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DATE</span>
-                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('meeting_date', 'TBD')}</span>
-                        </div>
-                    </div>
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
-                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">🕐</span>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">TIME</span>
-                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('meeting_time', 'TBD')}</span>
-                        </div>
-                    </div>
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
-                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">⏱️</span>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DURATION</span>
-                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('duration', '30 minutes')}</span>
-                        </div>
-                    </div>
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border: 1px solid #e9ecef;">
-                        <span style="color: #667eea; font-size: 1.5rem; width: 30px; text-align: center;">🎤</span>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">SPEAKER</span>
-                            <span style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('speaker_name', 'TBD')}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Meeting Link Section -->
-            {f'''
-            <div style="padding: 0 2rem 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                    <span style="color: #667eea; font-size: 1.2rem;">🔗</span>
-                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Link</h3>
-                </div>
-                <a href="{kwargs.get('meeting_link', '#')}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; border: none; cursor: pointer;">
-                    Join Meeting
-                </a>
-            </div>
-            ''' if kwargs.get('meeting_link') else ''}
-            
-            <!-- Location Section -->
-            {f'''
-            <div style="padding: 0 2rem 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                    <span style="color: #667eea; font-size: 1.2rem;">📍</span>
-                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Location</h3>
-                </div>
-                <p style="color: #2c3e50; font-weight: 500; margin: 0; font-size: 1rem;">{kwargs.get('location', 'TBD')}</p>
-            </div>
-            ''' if kwargs.get('location') else ''}
-            
-            <!-- Agenda Section -->
-            {f'''
-            <div style="padding: 0 2rem 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                    <span style="color: #667eea; font-size: 1.2rem;">📄</span>
-                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Agenda</h3>
-                </div>
-                <p style="color: #2c3e50; margin: 0; line-height: 1.6;">{kwargs.get('additional_notes', 'Discussing meeting objectives and key points')}</p>
-            </div>
-            ''' if kwargs.get('additional_notes') else ''}
-            
-            <!-- Attendees Section -->
-            {f'''
-            <div style="padding: 0 2rem 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                    <span style="color: #667eea; font-size: 1.2rem;">👥</span>
-                    <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Attendees</h3>
-                </div>
-                <p style="color: #2c3e50; margin: 0; font-weight: 500;">{attendees if attendees else 'To be confirmed'}</p>
-            </div>
-            ''' if attendees else ''}
-            
-            <!-- Action Button -->
-            <div style="padding: 2rem; text-align: center; background: #f8f9fa;">
-                <button style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    Confirm Attendance
-                </button>
-            </div>
-            
-            <!-- Footer -->
-            <div style="background: #343a40; color: white; padding: 1.5rem 2rem; text-align: center;">
-                <p style="margin: 0.25rem 0; font-size: 0.9rem; opacity: 0.9;">Generated by SmartMeetingAI • Professional Meeting Coordination</p>
-                <p style="margin: 0.25rem 0; font-size: 0.9rem; opacity: 0.9;">Please respond to confirm your attendance</p>
-            </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Meeting Invitation</title>
+        </head>
+        <body style="margin: 0; padding: 20px; background-color: #F5F5DC; font-family: Arial, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+                <tr>
+                    <td style="background: #F5F5DC; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                        
+                        <!-- Header Section -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="background: #F5F5DC; padding: 3rem 2rem; text-align: center;">
+                                    <!-- Logo Section -->
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="text-align: center; padding-bottom: 2rem;">
+                                                <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                                    <tr>
+                                                        <td style="text-align: center; padding-right: 2rem;">
+                                                            <!-- SKILL Logo -->
+                                                            <div style="font-size: 2.5rem; font-weight: 700; color: #90EE90; position: relative; display: inline-block;">
+                                                                SKILL
+                                                                <span style="position: absolute; top: 0; right: -15px; width: 12px; height: 12px; background: #FF6B6B; border-radius: 50%;"></span>
+                                                            </div>
+                                                            <div style="font-size: 0.9rem; color: #6c757d; font-weight: 500; margin-top: 0.5rem;">भारत ASSOCIATION</div>
+                                                        </td>
+                                                        <td style="width: 2px; background: #6c757d; opacity: 0.3; padding: 0 1rem;"></td>
+                                                        <td style="text-align: center; padding-left: 2rem;">
+                                                            <!-- Elite Principals Club Logo -->
+                                                            <div style="width: 120px; height: 120px; background: #000; border-radius: 50%; display: inline-block; vertical-align: middle; line-height: 120px; color: white;">
+                                                                <div style="font-size: 0.8rem; font-weight: 700; text-align: center; line-height: 1.2; padding: 1rem;">
+                                                                    ELITE PRINCIPALS CLUB
+                                                                    <div style="font-size: 0.6rem; opacity: 0.8; margin-top: 0.25rem;">World's Biggest Influencers Network</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Main Title Section -->
+                                    <div style="margin-bottom: 2rem;">
+                                        <h1 style="font-size: 2.5rem; font-weight: 700; color: #000; margin: 0 0 0.5rem 0; text-transform: uppercase;">ELITE PRINCIPALS CLUB</h1>
+                                        <div style="font-size: 1.2rem; color: #000; font-style: italic; margin-bottom: 1rem;">Presents</div>
+                                        <div style="font-size: 3.5rem; font-weight: 700; color: #000; margin: 0 0 1rem 0;">
+                                            <span style="color: #8B4513; font-size: 2.5rem;">🧠</span>
+                                            <span>{kwargs.get('meeting_topic', 'Think Tank Meet')}</span>
+                                        </div>
+                                        <div style="font-size: 1.3rem; color: #000; font-weight: 500; margin: 0;">Where Ideas for Meaningful Education Begin</div>
+                                    </div>
+                                    
+                                    <!-- Event Description -->
+                                    <div style="margin-bottom: 2rem;">
+                                        <p style="font-size: 1.1rem; color: #6c757d; margin: 0; line-height: 1.6;">Join us for an inspiring virtual gathering of thought leaders, educators, and changemakers!</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Date & Time Section -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 2rem; background: #F5F5DC;">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="text-align: center;">
+                                                <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                                    <tr>
+                                                        <td style="text-align: center; padding-right: 2rem;">
+                                                            <span style="color: #6c757d; font-size: 1.2rem;">📅</span>
+                                                            <span style="font-size: 1.5rem; font-weight: 700; color: #000;">{meeting_date.upper() if meeting_date != 'TBD' else 'TBD'}</span>
+                                                        </td>
+                                                        <td style="width: 2px; background: #6c757d; opacity: 0.3; padding: 0 1rem;"></td>
+                                                        <td style="text-align: center; padding-left: 2rem;">
+                                                            <span style="color: #6c757d; font-size: 1.2rem;">⏰</span>
+                                                            <span style="font-size: 1.5rem; font-weight: 700; color: #000;">{meeting_time.upper() if meeting_time != 'TBD' else 'TBD'}</span>
+                                                            <span style="font-size: 1.2rem; font-weight: 700; color: #000;">SHARP</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Meeting Details -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 2rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                        <span style="color: #667eea; font-size: 1.2rem;">📋</span>
+                                        <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Details</h3>
+                                    </div>
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                                                                         <td style="padding: 0.5rem;">
+                                                 <table width="100%" cellpadding="0" cellspacing="0" style="background: #F5F5DC; border-radius: 12px; border: 1px solid #e9ecef;">
+                                                     <tr>
+                                                         <td style="padding: 1.5rem; text-align: center;">
+                                                             <span style="color: #667eea; font-size: 1.5rem;">📅</span>
+                                                             <div style="margin-top: 0.5rem;">
+                                                                 <div style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DATE</div>
+                                                                 <div style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{meeting_date}</div>
+                                                             </div>
+                                                         </td>
+                                                     </tr>
+                                                 </table>
+                                             </td>
+                                                                                         <td style="padding: 0.5rem;">
+                                                 <table width="100%" cellpadding="0" cellspacing="0" style="background: #F5F5DC; border-radius: 12px; border: 1px solid #e9ecef;">
+                                                     <tr>
+                                                         <td style="padding: 1.5rem; text-align: center;">
+                                                             <span style="color: #667eea; font-size: 1.5rem;">🕐</span>
+                                                             <div style="margin-top: 0.5rem;">
+                                                                 <div style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">TIME</div>
+                                                                 <div style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{meeting_time}</div>
+                                                             </div>
+                                                         </td>
+                                                     </tr>
+                                                 </table>
+                                             </td>
+                                        </tr>
+                                        <tr>
+                                                                                         <td style="padding: 0.5rem;">
+                                                 <table width="100%" cellpadding="0" cellspacing="0" style="background: #F5F5DC; border-radius: 12px; border: 1px solid #e9ecef;">
+                                                     <tr>
+                                                         <td style="padding: 1.5rem; text-align: center;">
+                                                             <span style="color: #667eea; font-size: 1.5rem;">⏱️</span>
+                                                             <div style="margin-top: 0.5rem;">
+                                                                 <div style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">DURATION</div>
+                                                                 <div style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('duration', '30 minutes')}</div>
+                                                             </div>
+                                                         </td>
+                                                     </tr>
+                                                 </table>
+                                             </td>
+                                                                                         <td style="padding: 0.5rem;">
+                                                 <table width="100%" cellpadding="0" cellspacing="0" style="background: #F5F5DC; border-radius: 12px; border: 1px solid #e9ecef;">
+                                                     <tr>
+                                                         <td style="padding: 1.5rem; text-align: center;">
+                                                             <span style="color: #667eea; font-size: 1.5rem;">🎤</span>
+                                                             <div style="margin-top: 0.5rem;">
+                                                                 <div style="font-size: 0.75rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">SPEAKER</div>
+                                                                 <div style="font-size: 1rem; color: #2c3e50; font-weight: 600;">{kwargs.get('speaker_name', 'TBD')}</div>
+                                                             </div>
+                                                         </td>
+                                                     </tr>
+                                                 </table>
+                                             </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Meeting Link Section -->
+                        {f'''
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 0 2rem 2rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                        <span style="color: #667eea; font-size: 1.2rem;">🔗</span>
+                                        <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Meeting Link</h3>
+                                    </div>
+                                    <a href="{kwargs.get('meeting_link', '#')}" style="display: inline-block; background: #007bff; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 1rem;">
+                                        <span style="margin-right: 0.5rem;">📹</span>ZOOM
+                                    </a>
+                                    <a href="{kwargs.get('meeting_link', '#')}" style="display: inline-block; background: #17a2b8; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                                        Join us
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                        ''' if kwargs.get('meeting_link') else ''}
+                        
+                        <!-- Location Section -->
+                        {f'''
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 0 2rem 2rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                        <span style="color: #667eea; font-size: 1.2rem;">📍</span>
+                                        <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Location</h3>
+                                    </div>
+                                    <p style="color: #2c3e50; font-weight: 500; margin: 0; font-size: 1rem;">{kwargs.get('location', 'TBD')}</p>
+                                </td>
+                            </tr>
+                        </table>
+                        ''' if kwargs.get('location') else ''}
+                        
+                        <!-- Agenda Section -->
+                        {f'''
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 0 2rem 2rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                        <span style="color: #667eea; font-size: 1.2rem;">📄</span>
+                                        <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Agenda</h3>
+                                    </div>
+                                    <p style="color: #2c3e50; margin: 0; line-height: 1.6;">{kwargs.get('additional_notes', 'Discussing meeting objectives and key points')}</p>
+                                </td>
+                            </tr>
+                        </table>
+                        ''' if kwargs.get('additional_notes') else ''}
+                        
+                        <!-- Attendees Section -->
+                        {f'''
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 0 2rem 2rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                        <span style="color: #667eea; font-size: 1.2rem;">👥</span>
+                                        <h3 style="color: #2c3e50; font-weight: 600; margin: 0; font-size: 1.1rem;">Attendees</h3>
+                                    </div>
+                                    <p style="color: #2c3e50; margin: 0; font-weight: 500;">{attendees if attendees else 'To be confirmed'}</p>
+                                </td>
+                            </tr>
+                        </table>
+                        ''' if attendees else ''}
+                        
+                        <!-- Slogan Section -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 2rem; text-align: center; background: #6c757d;">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: white; text-transform: uppercase; margin-bottom: 0.5rem;">PURPOSEFUL CONVERSATIONS.</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: white; text-transform: uppercase;">COLLECTIVE GROWTH.</div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Footer -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                                                 <td style="background: #F5F5DC; color: #6c757d; padding: 1.5rem 2rem; text-align: center;">
+                                    <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                        <tr>
+                                            <td style="text-align: center; padding-right: 1rem;">
+                                                <span style="color: #6c757d; font-size: 1rem;">📞</span>
+                                                <span style="font-size: 0.9rem;">+918879188188</span>
+                                            </td>
+                                            <td style="width: 2px; height: 20px; background: #6c757d; opacity: 0.3; padding: 0 0.5rem;"></td>
+                                            <td style="text-align: center; padding-left: 1rem;">
+                                                <span style="color: #6c757d; font-size: 1rem;">✉️</span>
+                                                <span style="font-size: 0.9rem;">Info@skillba.org</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
         """
 
 # Global instance

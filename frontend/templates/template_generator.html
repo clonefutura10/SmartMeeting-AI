@@ -412,31 +412,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Clear form
-    clearBtn.addEventListener('click', function() {
-        form.reset();
-        
-        // Clear additional fields
-        meetingSelect.value = '';
-        contactTypeSelect.value = '';
-        contactSelect.innerHTML = '<option value="">Loading contacts...</option>';
-        selectedAttendeesDiv.classList.add('d-none');
-        selectedContacts = [];
-        
-        preview.innerHTML = `
-            <div>
-                <i class="fas fa-file-alt fs-1 mb-3"></i>
-                <p class="mb-1">Fill in the meeting details and click "Generate Template"</p>
-                <p class="small mb-0">AI will create a professional invitation for you</p>
-            </div>
-        `;
-        preview.className = 'border rounded p-4 text-center text-muted';
-        preview.style.display = 'flex';
-        preview.style.alignItems = 'center';
-        preview.style.justifyContent = 'center';
-        actions.classList.add('d-none');
-        currentTemplateId = null;
-    });
+            // Clear form
+        clearBtn.addEventListener('click', function() {
+            form.reset();
+            
+            // Clear additional fields
+            meetingSelect.value = '';
+            contactTypeSelect.value = '';
+            contactSelect.innerHTML = '<option value="">Loading contacts...</option>';
+            selectedAttendeesDiv.classList.add('d-none');
+            selectedContacts = [];
+            
+            preview.innerHTML = `
+                <div>
+                    <i class="fas fa-file-alt fs-1 mb-3"></i>
+                    <p class="mb-1">Fill in the meeting details and click "Generate Template"</p>
+                    <p class="small mb-0">AI will create a professional invitation for you</p>
+                </div>
+            `;
+            preview.className = 'border rounded p-4 text-center text-muted';
+            preview.style.display = 'flex';
+            preview.style.alignItems = 'center';
+            preview.style.justifyContent = 'center';
+            actions.classList.add('d-none');
+            currentTemplateId = null;
+        });
 
     // Download template
     document.getElementById('download-template').addEventListener('click', function() {
