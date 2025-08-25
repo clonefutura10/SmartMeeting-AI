@@ -127,95 +127,119 @@ class SupabaseService:
     # Template Management (mapped to meetings and meeting_minutes)
     def create_template(self, user_id: str, title: str, content: str, **kwargs) -> Dict:
         """Create a new template (stored as meeting with minutes)"""
-        # First create a meeting marked as template
-        meeting_data = {
-            'organization_id': None,  # Will be set later if needed
-            'meeting_code': f"TEMPLATE_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
-            'title': title,
-            'scheduled_at': kwargs.get('meeting_date', datetime.utcnow().isoformat()),
-            'duration_mins': int(kwargs.get('duration', '30').split()[0]) if isinstance(kwargs.get('duration'), str) else kwargs.get('duration', 30),
-            'description': kwargs.get('additional_notes', ''),
-            'is_template': True,
-            'template_type': 'meeting'
-        }
-        
-        meeting_response = self.supabase.table('meetings').insert(meeting_data).execute()
-        meeting = meeting_response.data[0] if meeting_response.data else None
-        
-        if meeting:
-            # Create meeting minutes with the template content
-            minutes_data = {
-                'meeting_id': meeting['id'],
-                'summary': kwargs.get('additional_notes', ''),
-                'full_mom': content,
-                'created_by': user_id
-            }
-            
-            minutes_response = self.supabase.table('meeting_minutes').insert(minutes_data).execute()
-            
-            # Return combined data
-            return {
-                'id': meeting['id'],
+        try:
+            # First create a meeting marked as template
+            meeting_data = {
+                'organization_id': None,  # Will be set later if needed
+                'meeting_code': f"TEMPLATE_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
                 'title': title,
-                'content': content,
-                'user_id': user_id,
-                **kwargs
+                'scheduled_at': kwargs.get('meeting_date', datetime.utcnow().isoformat()),
+                'duration_mins': int(kwargs.get('duration', '30').split()[0]) if isinstance(kwargs.get('duration'), str) else kwargs.get('duration', 30),
+                'description': kwargs.get('additional_notes', ''),
+                'is_template': True,
+                'template_type': 'meeting'
             }
-        
-        return None
+            
+            meeting_response = self.supabase.table('meetings').insert(meeting_data).execute()
+            meeting = meeting_response.data[0] if meeting_response.data else None
+            
+            if meeting:
+                # Create meeting minutes with the template content
+                minutes_data = {
+                    'meeting_id': meeting['id'],
+                    'summary': kwargs.get('additional_notes', ''),
+                    'full_mom': content,
+                    'created_by': user_id
+                }
+                
+                minutes_response = self.supabase.table('meeting_minutes').insert(minutes_data).execute()
+                
+                # Return combined data
+                return {
+                    'id': meeting['id'],
+                    'title': title,
+                    'content': content,
+                    'user_id': user_id,
+                    **kwargs
+                }
+            
+            return None
+        except Exception as e:
+            if 'column meetings.is_template does not exist' in str(e):
+                print("Warning: is_template column does not exist. Please add it to your meetings table.")
+                print("SQL command to run in Supabase: ALTER TABLE meetings ADD COLUMN is_template BOOLEAN DEFAULT FALSE;")
+                return None
+            else:
+                raise e
     
     def get_templates(self, user_id: Optional[str] = None) -> List[Dict]:
         """Get templates (meetings with is_template=True)"""
-        # Query meetings that are templates
-        query = self.supabase.table('meetings').select('*, meeting_minutes(*)').eq('is_template', True)
-        
-        if user_id:
-            # Filter by created_by in meeting_minutes
-            minutes_query = self.supabase.table('meeting_minutes').select('meeting_id, created_by').eq('created_by', user_id).execute()
-            meeting_ids = [item['meeting_id'] for item in minutes_query.data] if minutes_query.data else []
+        try:
+            # Query meetings that are templates
+            query = self.supabase.table('meetings').select('*, meeting_minutes(*)').eq('is_template', True)
             
-            if meeting_ids:
-                response = query.in_('id', meeting_ids).execute()
+            if user_id:
+                # Filter by created_by in meeting_minutes
+                minutes_query = self.supabase.table('meeting_minutes').select('meeting_id, created_by').eq('created_by', user_id).execute()
+                meeting_ids = [item['meeting_id'] for item in minutes_query.data] if minutes_query.data else []
+                
+                if meeting_ids:
+                    response = query.in_('id', meeting_ids).execute()
+                else:
+                    return []
             else:
+                response = query.execute()
+            
+            templates = []
+            for meeting in response.data if response.data else []:
+                if meeting.get('meeting_minutes'):
+                    minutes = meeting['meeting_minutes']
+                    templates.append({
+                        'id': meeting['id'],
+                        'title': meeting['title'],
+                        'content': minutes.get('full_mom', ''),
+                        'user_id': minutes.get('created_by'),
+                        'meeting_topic': meeting['title'],
+                        'meeting_date': meeting['scheduled_at'],
+                        'duration': f"{meeting['duration_mins']} minutes",
+                        'additional_notes': minutes.get('summary', '')
+                    })
+            
+            return templates
+        except Exception as e:
+            if 'column meetings.is_template does not exist' in str(e):
+                print("Warning: is_template column does not exist. Please add it to your meetings table.")
+                print("SQL command to run in Supabase: ALTER TABLE meetings ADD COLUMN is_template BOOLEAN DEFAULT FALSE;")
                 return []
-        else:
-            response = query.execute()
-        
-        templates = []
-        for meeting in response.data if response.data else []:
-            if meeting.get('meeting_minutes'):
-                minutes = meeting['meeting_minutes']
-                templates.append({
-                    'id': meeting['id'],
-                    'title': meeting['title'],
-                    'content': minutes.get('full_mom', ''),
-                    'user_id': minutes.get('created_by'),
-                    'meeting_topic': meeting['title'],
-                    'meeting_date': meeting['scheduled_at'],
-                    'duration': f"{meeting['duration_mins']} minutes",
-                    'additional_notes': minutes.get('summary', '')
-                })
-        
-        return templates
+            else:
+                raise e
     
     def get_template(self, template_id: str) -> Optional[Dict]:
         """Get a specific template"""
-        response = self.supabase.table('meetings').select('*, meeting_minutes(*)').eq('id', template_id).eq('is_template', True).execute()
-        if response.data:
-            meeting = response.data[0]
-            if meeting.get('meeting_minutes'):
-                minutes = meeting['meeting_minutes']
-                return {
-                    'id': meeting['id'],
-                    'title': meeting['title'],
-                    'content': minutes.get('full_mom', ''),
-                    'user_id': minutes.get('created_by'),
-                    'meeting_topic': meeting['title'],
-                    'meeting_date': meeting['scheduled_at'],
-                    'duration': f"{meeting['duration_mins']} minutes",
-                    'additional_notes': minutes.get('summary', '')
-                }
-        return None
+        try:
+            response = self.supabase.table('meetings').select('*, meeting_minutes(*)').eq('id', template_id).eq('is_template', True).execute()
+            if response.data:
+                meeting = response.data[0]
+                if meeting.get('meeting_minutes'):
+                    minutes = meeting['meeting_minutes']
+                    return {
+                        'id': meeting['id'],
+                        'title': meeting['title'],
+                        'content': minutes.get('full_mom', ''),
+                        'user_id': minutes.get('created_by'),
+                        'meeting_topic': meeting['title'],
+                        'meeting_date': meeting['scheduled_at'],
+                        'duration': f"{meeting['duration_mins']} minutes",
+                        'additional_notes': minutes.get('summary', '')
+                    }
+            return None
+        except Exception as e:
+            if 'column meetings.is_template does not exist' in str(e):
+                print("Warning: is_template column does not exist. Please add it to your meetings table.")
+                print("SQL command to run in Supabase: ALTER TABLE meetings ADD COLUMN is_template BOOLEAN DEFAULT FALSE;")
+                return None
+            else:
+                raise e
     
     def update_template(self, template_id: str, **kwargs) -> Dict:
         """Update a template"""
@@ -480,6 +504,27 @@ class SupabaseService:
             except Exception as e:
                 # Contact might already exist, skip silently
                 continue
+
+    def ensure_database_schema(self):
+        """Ensure all required database columns exist"""
+        try:
+            # Check if is_template column exists in meetings table
+            # We'll try to query it and see if it fails
+            test_query = self.supabase.table('meetings').select('is_template').limit(1).execute()
+            print("Database schema is up to date")
+        except Exception as e:
+            if 'column meetings.is_template does not exist' in str(e):
+                print("⚠️  Missing database column detected!")
+                print("The 'is_template' column is missing from your meetings table.")
+                print("")
+                print("To fix this, please run the following SQL command in your Supabase dashboard:")
+                print("")
+                print("ALTER TABLE meetings ADD COLUMN is_template BOOLEAN DEFAULT FALSE;")
+                print("")
+                print("After running this command, restart your application.")
+                print("The application will continue to work but template functionality will be limited.")
+            else:
+                print(f"Database schema check error: {e}")
 
 # Global instance
 supabase_service = SupabaseService() 

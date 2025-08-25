@@ -45,6 +45,9 @@ User, Template, Distribution = init_models(db)
 # Initialize Supabase service and demo data
 with app.app_context():
     try:
+        # Ensure database schema is up to date
+        db.ensure_database_schema()
+        
         # Initialize demo contacts
         db.initialize_demo_contacts()
         print("Supabase connection and demo data initialized successfully!")
@@ -87,82 +90,8 @@ def apple_touch_icon_precomposed():
 @app.route('/')
 @login_required
 def dashboard():
-    # Get statistics
-    stats = {
-        'templates_generated': Template.query().filter_by(user_id=current_user.id).count(),
-        'invitations_sent': Distribution.query().filter_by(user_id=current_user.id, status='sent').count(),
-        'total_recipients': 0,  # Will calculate from distributions
-        'calendar_events': Distribution.query().filter_by(user_id=current_user.id, method='calendar').count(),
-        'success_rate': 94.2,  # Mock data
-        'recent_activity': []
-    }
-    
-    # Calculate total recipients
-    distributions = Distribution.query().filter_by(user_id=current_user.id).all()
-    for dist in distributions:
-        if dist.recipients:
-            recipients_list = json.loads(dist.recipients) if isinstance(dist.recipients, str) else dist.recipients
-            stats['total_recipients'] += len(recipients_list)
-    
-    # Get recent distributions
-    recent_distributions = Distribution.query().filter_by(user_id=current_user.id).all()
-    
-    # Sort by created_at, handling both string and datetime objects
-    def get_sort_key(dist):
-        timestamp = dist.created_at
-        if isinstance(timestamp, str):
-            try:
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                # Convert to naive datetime for comparison
-                return dt.replace(tzinfo=None) if dt.tzinfo else dt
-            except:
-                return datetime.min
-        # Ensure datetime is naive for comparison
-        if timestamp and hasattr(timestamp, 'tzinfo') and timestamp.tzinfo:
-            return timestamp.replace(tzinfo=None)
-        return timestamp or datetime.min
-    
-    recent_distributions.sort(key=get_sort_key, reverse=True)
-    recent_distributions = recent_distributions[:5]
-    
-    for dist in recent_distributions:
-        # Get template data from Supabase
-        template_data = db.get_template(dist.template_id)
-        template_title = template_data.get('title', 'Unknown Template') if template_data else 'Unknown Template'
-        
-        # Parse timestamp if it's a string
-        timestamp = dist.created_at
-        if isinstance(timestamp, str):
-            try:
-                # Try to parse ISO format timestamp
-                timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                # Convert to naive datetime
-                timestamp = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
-            except:
-                try:
-                    # Fallback to dateutil parser if available
-                    from dateutil import parser as date_parser
-                    timestamp = date_parser.parse(timestamp)
-                    # Convert to naive datetime
-                    timestamp = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
-                except:
-                    timestamp = datetime.utcnow()
-        elif not timestamp:
-            timestamp = datetime.utcnow()
-        else:
-            # Ensure existing datetime is naive
-            timestamp = timestamp.replace(tzinfo=None) if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo else timestamp
-        
-        stats['recent_activity'].append({
-            'id': dist.id,
-            'type': 'invitation_sent',
-            'title': template_title,
-            'description': f'Sent via {dist.method}',
-            'timestamp': timestamp,
-            'status': dist.status
-        })
-    
-    return render_template('dashboard.html', stats=stats)
+    # Redirect to template generator as the main page
+    return redirect(url_for('template_generator_page'))
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():

@@ -1,14 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Template Generator - SmartMeetingAI{% endblock %}
+{% block title %}Create Template - SmartMeetingAI{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-4">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="h2 fw-bold text-dark mb-1">Template Generator</h1>
-            <p class="text-muted mb-0">Create professional meeting invitations with AI assistance</p>
+            <div class="text-center mb-4">
+                <h1 class="display-4 fw-bold text-dark mb-3">Welcome to SmartMeetingAI</h1>
+                <p class="lead text-muted mb-4">Create professional meeting invitations with AI assistance</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Quick Start:</strong> Fill in your meeting details below and let AI generate a professional invitation template for you.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h2 class="h3 fw-bold text-dark mb-1">Create Meeting Template</h2>
+            <p class="text-muted mb-0">Generate professional meeting invitations with AI assistance</p>
         </div>
     </div>
 
@@ -23,32 +35,6 @@
                 </div>
                 <div class="card-body">
                     <form id="template-form">
-                        <!-- Database Integration Section -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-12">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-database me-2"></i>
-                                    <strong>Database Integration:</strong> You can fetch existing meeting details and contacts from the database, or enter them manually below.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Meeting Selection -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label for="meetingSelect" class="form-label">Select Existing Meeting (Optional)</label>
-                                <select class="form-select" id="meetingSelect" name="meetingSelect">
-                                    <option value="">Choose from existing meetings...</option>
-                                </select>
-                                <div class="form-text">Select a meeting to auto-fill details</div>
-                            </div>
-                            <div class="col-md-6">
-                                <button type="button" id="refreshMeetings" class="btn btn-outline-primary btn-sm mt-4">
-                                    <i class="fas fa-sync-alt me-1"></i>Refresh Meetings
-                                </button>
-                            </div>
-                        </div>
-
                         <!-- Basic Information -->
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
@@ -110,7 +96,6 @@
                                     <option value="team_standup">Team Standup</option>
                                     <option value="project_review">Project Review</option>
                                 </select>
-                                <div class="form-text">Choose the professional template style that best fits your meeting</div>
                             </div>
                             <div class="col-md-6">
                                 <label for="priority" class="form-label">Priority</label>
@@ -131,41 +116,9 @@
 
                         <!-- Attendees Section -->
                         <div class="mb-3">
-                            <label class="form-label">Attendees</label>
-                            
-                            <!-- Contact Selection -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-6">
-                                    <label for="contactType" class="form-label small">Select Contact Type</label>
-                                    <select class="form-select form-select-sm" id="contactType">
-                                        <option value="">Choose contact type...</option>
-                                        <option value="internal">Internal Members</option>
-                                        <option value="external">External Contacts</option>
-                                        <option value="all">All Contacts</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="contactSelect" class="form-label small">Select Contacts</label>
-                                    <select class="form-select form-select-sm" id="contactSelect" multiple>
-                                        <option value="">Loading contacts...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Manual Entry -->
-                            <div class="mb-2">
-                                <label for="attendees" class="form-label small">Or Enter Manually</label>
-                                <textarea class="form-control" id="attendees" name="attendees" rows="3" placeholder="Enter attendee names (one per line)"></textarea>
-                                <div class="form-text">Enter one attendee per line, or use the contact selection above</div>
-                            </div>
-                            
-                            <!-- Selected Attendees Display -->
-                            <div id="selectedAttendees" class="mt-2 d-none">
-                                <label class="form-label small">Selected Attendees:</label>
-                                <div id="attendeesList" class="border rounded p-2 bg-light">
-                                    <!-- Selected attendees will be displayed here -->
-                                </div>
-                            </div>
+                            <label for="attendees" class="form-label">Attendees</label>
+                            <textarea class="form-control" id="attendees" name="attendees" rows="3" placeholder="Enter attendee names (one per line)"></textarea>
+                            <div class="form-text">Enter one attendee per line</div>
                         </div>
 
                         <div class="mb-4">
@@ -225,134 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const preview = document.getElementById('template-preview');
     const actions = document.getElementById('template-actions');
     const clearBtn = document.getElementById('clear-form');
-    const meetingSelect = document.getElementById('meetingSelect');
-    const refreshMeetingsBtn = document.getElementById('refreshMeetings');
-    const contactTypeSelect = document.getElementById('contactType');
-    const contactSelect = document.getElementById('contactSelect');
-    const selectedAttendeesDiv = document.getElementById('selectedAttendees');
-    const attendeesList = document.getElementById('attendeesList');
     let currentTemplateId = null;
-    let selectedContacts = [];
-
-    // Load meetings on page load
-    loadMeetings();
-
-    // Load contacts on page load
-    loadContacts();
-
-    // Refresh meetings button
-    refreshMeetingsBtn.addEventListener('click', loadMeetings);
-
-    // Contact type change handler
-    contactTypeSelect.addEventListener('change', function() {
-        loadContacts(this.value);
-    });
-
-    // Contact selection change handler
-    contactSelect.addEventListener('change', function() {
-        updateSelectedAttendees();
-    });
-
-    // Meeting selection change handler
-    meetingSelect.addEventListener('change', function() {
-        if (this.value) {
-            loadMeetingDetails(this.value);
-        }
-    });
-
-    // Load meetings from database
-    async function loadMeetings() {
-        try {
-            const response = await fetch('/api/meetings');
-            const result = await response.json();
-            
-            if (result.success) {
-                meetingSelect.innerHTML = '<option value="">Choose from existing meetings...</option>';
-                result.meetings.forEach(meeting => {
-                    const option = document.createElement('option');
-                    option.value = meeting.id;
-                    option.textContent = `${meeting.title} (${meeting.meeting_code}) - ${new Date(meeting.scheduled_at).toLocaleDateString()}`;
-                    meetingSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading meetings:', error);
-        }
-    }
-
-    // Load contacts from database
-    async function loadContacts(memberType = '') {
-        try {
-            let url = '/api/contacts';
-            if (memberType) {
-                url += `?member_type=${memberType}`;
-            }
-            
-            const response = await fetch(url);
-            const result = await response.json();
-            
-            if (result.success) {
-                contactSelect.innerHTML = '';
-                result.contacts.forEach(contact => {
-                    const option = document.createElement('option');
-                    option.value = contact.id;
-                    option.textContent = `${contact.name} (${contact.email}) - ${contact.member_type}`;
-                    option.dataset.email = contact.email;
-                    option.dataset.name = contact.name;
-                    contactSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading contacts:', error);
-        }
-    }
-
-    // Load meeting details
-    async function loadMeetingDetails(meetingId) {
-        try {
-            const response = await fetch(`/api/meetings/${meetingId}`);
-            const result = await response.json();
-            
-            if (result.success) {
-                const meeting = result.meeting;
-                
-                // Auto-fill form fields
-                document.getElementById('meetingTopic').value = meeting.title || '';
-                document.getElementById('date').value = meeting.scheduled_at ? meeting.scheduled_at.split('T')[0] : '';
-                document.getElementById('time').value = meeting.scheduled_at ? meeting.scheduled_at.split('T')[1].substring(0, 5) : '';
-                document.getElementById('duration').value = meeting.duration_mins ? `${meeting.duration_mins} minutes` : '';
-                
-                // Fill attendees if available
-                if (meeting.attendees && meeting.attendees.length > 0) {
-                    const attendeeNames = meeting.attendees.map(attendee => attendee.name).join('\n');
-                    document.getElementById('attendees').value = attendeeNames;
-                }
-                
-                showAlert('Meeting details loaded successfully!', 'success');
-            }
-        } catch (error) {
-            console.error('Error loading meeting details:', error);
-            showAlert('Error loading meeting details', 'danger');
-        }
-    }
-
-    // Update selected attendees display
-    function updateSelectedAttendees() {
-        selectedContacts = Array.from(contactSelect.selectedOptions).map(option => ({
-            id: option.value,
-            name: option.dataset.name,
-            email: option.dataset.email
-        }));
-
-        if (selectedContacts.length > 0) {
-            attendeesList.innerHTML = selectedContacts.map(contact => 
-                `<span class="badge bg-primary me-1 mb-1">${contact.name} (${contact.email})</span>`
-            ).join('');
-            selectedAttendeesDiv.classList.remove('d-none');
-        } else {
-            selectedAttendeesDiv.classList.add('d-none');
-        }
-    }
 
     // Form submission
     form.addEventListener('submit', async function(e) {
@@ -366,10 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (key === 'attendees') {
                 // Split attendees by newline and filter empty lines
                 const manualAttendees = value.split('\n').filter(attendee => attendee.trim() !== '');
-                
-                // Combine manual attendees with selected contacts
-                const selectedContactNames = selectedContacts.map(contact => contact.name);
-                data[key] = [...new Set([...manualAttendees, ...selectedContactNames])];
+                data[key] = manualAttendees;
             } else {
                 data[key] = value;
             }
@@ -412,31 +235,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-            // Clear form
-        clearBtn.addEventListener('click', function() {
-            form.reset();
-            
-            // Clear additional fields
-            meetingSelect.value = '';
-            contactTypeSelect.value = '';
-            contactSelect.innerHTML = '<option value="">Loading contacts...</option>';
-            selectedAttendeesDiv.classList.add('d-none');
-            selectedContacts = [];
-            
-            preview.innerHTML = `
-                <div>
-                    <i class="fas fa-file-alt fs-1 mb-3"></i>
-                    <p class="mb-1">Fill in the meeting details and click "Generate Template"</p>
-                    <p class="small mb-0">AI will create a professional invitation for you</p>
-                </div>
-            `;
-            preview.className = 'border rounded p-4 text-center text-muted';
-            preview.style.display = 'flex';
-            preview.style.alignItems = 'center';
-            preview.style.justifyContent = 'center';
-            actions.classList.add('d-none');
-            currentTemplateId = null;
-        });
+    // Clear form
+    clearBtn.addEventListener('click', function() {
+        form.reset();
+        
+        preview.innerHTML = `
+            <div>
+                <i class="fas fa-file-alt fs-1 mb-3"></i>
+                <p class="mb-1">Fill in the meeting details and click "Generate Template"</p>
+                <p class="small mb-0">AI will create a professional invitation for you</p>
+            </div>
+        `;
+        preview.className = 'border rounded p-4 text-center text-muted';
+        preview.style.display = 'flex';
+        preview.style.alignItems = 'center';
+        preview.style.justifyContent = 'center';
+        actions.classList.add('d-none');
+        currentTemplateId = null;
+    });
 
     // Download template
     document.getElementById('download-template').addEventListener('click', function() {

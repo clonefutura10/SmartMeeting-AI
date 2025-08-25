@@ -7,13 +7,30 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4 fw-bold text-dark mb-3">Send Meeting Invitations</h1>
+                <p class="lead text-muted mb-4">Distribute your meeting templates via email, WhatsApp, or calendar</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success">
+                            <i class="fas fa-rocket me-2"></i>
+                            <strong>Ready to Send:</strong> Select a template and choose your preferred distribution method below.
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h2 mb-1 text-dark fw-bold">
+                    <h2 class="h3 mb-1 text-dark fw-bold">
                         <i class="fas fa-paper-plane me-2 text-primary"></i>
                         Distribution
-                    </h1>
+                    </h2>
                     <p class="text-muted mb-0">Send meeting invitations via email, WhatsApp, or calendar</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('template_generator_page') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create New Template
+                    </a>
                 </div>
             </div>
         </div>
@@ -87,52 +104,20 @@
                         <div class="card-body">
                             <form id="gmail-form">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">
+                                    <label for="gmail-emails" class="form-label fw-semibold">
                                         <i class="fas fa-envelope me-1"></i>
                                         Recipient Emails
                                     </label>
-                                    
-                                    <!-- Contact Type Selection -->
-                                    <div class="mb-2">
-                                        <select id="gmail-contact-type" class="form-select form-select-sm">
-                                            <option value="">All Contacts</option>
-                                            <option value="internal">Internal Members</option>
-                                            <option value="external">External Contacts</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <!-- Contact Selection -->
-                                    <div class="mb-2">
-                                        <select id="gmail-contact-select" class="form-select" multiple size="4">
-                                            <option value="">Loading contacts...</option>
-                                        </select>
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Hold Ctrl/Cmd to select multiple contacts
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Selected Recipients Display -->
-                                    <div id="gmail-selected-recipients" class="d-none mb-2">
-                                        <label class="form-label fw-semibold small">
-                                            <i class="fas fa-check-circle me-1"></i>
-                                            Selected Recipients:
-                                        </label>
-                                        <div id="gmail-recipients-list" class="border rounded p-2 bg-light"></div>
-                                    </div>
-                                    
-                                    <!-- Manual Email Input -->
-                                    <div class="mb-2">
-                                        <textarea 
-                                            id="gmail-manual-emails" 
-                                            name="manualEmails" 
-                                            rows="2" 
-                                            class="form-control" 
-                                            placeholder="Or enter additional email addresses manually (one per line)"></textarea>
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Add any additional email addresses not in your contacts
-                                        </div>
+                                    <textarea 
+                                        id="gmail-emails" 
+                                        name="emails" 
+                                        rows="4" 
+                                        class="form-control" 
+                                        placeholder="Enter email addresses (one per line)&#10;Example:&#10;john@example.com&#10;jane@company.com"
+                                        required></textarea>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Enter one email address per line
                                     </div>
                                 </div>
                                 <div class="mb-3">
@@ -311,20 +296,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     let selectedTemplateId = null;
     let selectedTemplateContent = null;
-    let selectedGmailContacts = [];
-
-    // Load contacts on page load
-    loadGmailContacts();
-    
-    // Gmail contact type change handler
-    document.getElementById('gmail-contact-type').addEventListener('change', function() {
-        loadGmailContacts(this.value);
-    });
-    
-    // Gmail contact selection change handler
-    document.getElementById('gmail-contact-select').addEventListener('change', function() {
-        updateGmailSelectedRecipients();
-    });
 
     // Template selection
     document.querySelectorAll('.template-item').forEach(item => {
@@ -344,55 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load Gmail contacts from database
-    async function loadGmailContacts(memberType = '') {
-        try {
-            let url = '/api/contacts';
-            if (memberType) {
-                url += `?member_type=${memberType}`;
-            }
-            
-            const response = await fetch(url);
-            const result = await response.json();
-            
-            if (result.success) {
-                const contactSelect = document.getElementById('gmail-contact-select');
-                contactSelect.innerHTML = '';
-                result.contacts.forEach(contact => {
-                    const option = document.createElement('option');
-                    option.value = contact.id;
-                    option.textContent = `${contact.name} (${contact.email}) - ${contact.member_type}`;
-                    option.dataset.email = contact.email;
-                    option.dataset.name = contact.name;
-                    contactSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading contacts:', error);
-        }
-    }
 
-    // Update Gmail selected recipients display
-    function updateGmailSelectedRecipients() {
-        const contactSelect = document.getElementById('gmail-contact-select');
-        selectedGmailContacts = Array.from(contactSelect.selectedOptions).map(option => ({
-            id: option.value,
-            name: option.dataset.name,
-            email: option.dataset.email
-        }));
-
-        const selectedRecipientsDiv = document.getElementById('gmail-selected-recipients');
-        const recipientsList = document.getElementById('gmail-recipients-list');
-
-        if (selectedGmailContacts.length > 0) {
-            recipientsList.innerHTML = selectedGmailContacts.map(contact => 
-                `<span class="badge bg-primary me-1 mb-1">${contact.name} (${contact.email})</span>`
-            ).join('');
-            selectedRecipientsDiv.classList.remove('d-none');
-        } else {
-            selectedRecipientsDiv.classList.add('d-none');
-        }
-    }
 
     // Gmail form submission
     document.getElementById('gmail-form').addEventListener('submit', async function(e) {
@@ -405,23 +328,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const formData = new FormData(this);
         
-        // Get selected contact emails
-        const selectedEmails = selectedGmailContacts.map(contact => contact.email);
+        // Get emails from textarea
+        const emails = formData.get('emails').split('\n').filter(email => email.trim() !== '');
         
-        // Get manual emails
-        const manualEmails = formData.get('manualEmails').split('\n').filter(email => email.trim() !== '');
-        
-        // Combine all emails
-        const recipientEmails = [...selectedEmails, ...manualEmails];
-        
-        if (recipientEmails.length === 0) {
-            showAlert('Please select contacts or enter at least one email address', 'warning');
+        if (emails.length === 0) {
+            showAlert('Please enter at least one email address', 'warning');
             return;
         }
 
         const data = {
             templateId: selectedTemplateId,
-            recipientEmails: recipientEmails,
+            recipientEmails: emails,
             subject: formData.get('subject')
         };
 
